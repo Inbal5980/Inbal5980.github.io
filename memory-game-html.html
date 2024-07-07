@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>משחק זיכרון: התאמת אותיות ראשונות</title>
+    <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const words = [
+            'Apple', 'Apricot', 'Banana', 'Blueberry', 'Cherry', 'Coconut',
+            'Date', 'Durian', 'Elderberry', 'Fig', 'Grape', 'Guava'
+        ];
+
+        const colors = [
+            'bg-red-300', 'bg-blue-300', 'bg-green-300', 'bg-yellow-300', 
+            'bg-purple-300', 'bg-pink-300', 'bg-indigo-300', 'bg-orange-300',
+            'bg-teal-300', 'bg-cyan-300', 'bg-lime-300', 'bg-rose-300'
+        ];
+
+        const MemoryGame = () => {
+            const [cards, setCards] = React.useState([]);
+            const [flipped, setFlipped] = React.useState([]);
+            const [solved, setSolved] = React.useState([]);
+            const [gameOver, setGameOver] = React.useState(false);
+
+            React.useEffect(() => {
+                const shuffledCards = [...words, ...words]
+                    .sort(() => Math.random() - 0.5)
+                    .map((word, index) => ({
+                        id: index,
+                        word,
+                        color: colors[index % colors.length],
+                    }));
+                setCards(shuffledCards);
+            }, []);
+
+            const handleClick = (id) => {
+                if (flipped.length === 2 || solved.includes(id) || flipped.includes(id)) return;
+                
+                const newFlipped = [...flipped, id];
+                setFlipped(newFlipped);
+
+                if (newFlipped.length === 2) {
+                    const [first, second] = newFlipped.map(id => cards.find(card => card.id === id));
+                    if (first.word[0] === second.word[0]) {
+                        setSolved([...solved, first.id, second.id]);
+                        setFlipped([]);
+                        if (solved.length + 2 === cards.length) {
+                            setGameOver(true);
+                        }
+                    } else {
+                        setTimeout(() => setFlipped([]), 1000);
+                    }
+                }
+            };
+
+            return (
+                <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
+                    <h1 className="text-3xl font-bold mb-6">משחק זיכרון: התאמת אותיות ראשונות</h1>
+                    <div className="grid grid-cols-4 gap-4">
+                        {cards.map(card => (
+                            <div
+                                key={card.id}
+                                className={`${card.color} w-24 h-32 rounded-lg flex items-center justify-center cursor-pointer transform transition-transform duration-300 ${
+                                    flipped.includes(card.id) || solved.includes(card.id) ? 'rotate-y-180' : ''
+                                }`}
+                                onClick={() => handleClick(card.id)}
+                            >
+                                {flipped.includes(card.id) || solved.includes(card.id) ? (
+                                    <span className="text-xl font-bold">{card.word}</span>
+                                ) : (
+                                    <span className="text-4xl" role="img" aria-label="strawberry">🍓</span>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                    {gameOver && (
+                        <div className="mt-8 text-2xl font-bold text-green-600">
+                            כל הכבוד הצלחת!
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        ReactDOM.render(<MemoryGame />, document.getElementById('root'));
+    </script>
+</body>
+</html>
